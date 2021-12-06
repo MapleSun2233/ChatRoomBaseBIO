@@ -34,10 +34,28 @@ public class ServerSocketThread implements Runnable{
                 if(receivedAccountInfo.startsWith("r&&")){ // 注册任务
                     receivedAccountInfo = receivedAccountInfo.substring(3);
                     String[] loginInfo = receivedAccountInfo.split(" ");
-                    if(DatabaseInterface.addUser(loginInfo[0],loginInfo[1])){
+                    if(DatabaseInterface.addUser(loginInfo[0],loginInfo[1],loginInfo[2])){
                         clientOS.write("register successfully");
                     }else{
                         clientOS.write("account had existed");
+                    }
+                    clientOS.newLine();
+                    clientOS.flush();
+                    clientIS.close();
+                    clientOS.close();
+                    clientSocket.close();
+                }else if(receivedAccountInfo.startsWith("rp&&")){ // 找回密码任务
+                    receivedAccountInfo = receivedAccountInfo.substring(4);
+                    String[] loginInfo = receivedAccountInfo.split(" ");
+                    User user = DatabaseInterface.queryAUser(loginInfo[0]);
+                    if(user == null){
+                        clientOS.write("account is not exist");
+                    }else if(!user.getEmail().equals(loginInfo[2])){
+                        clientOS.write("email is wrong");
+                    }else if(DatabaseInterface.updateUser(loginInfo[0],loginInfo[1],loginInfo[2])){
+                        clientOS.write("retrieve successfully");
+                    }else{
+                        clientOS.write("other error");
                     }
                     clientOS.newLine();
                     clientOS.flush();
@@ -65,7 +83,7 @@ public class ServerSocketThread implements Runnable{
                 try {
                     loginFail(clientSocket,clientIS,clientOS,"socket连接异常");
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+                    System.out.println("失败消息推送失败！");
                 }
             }
         }

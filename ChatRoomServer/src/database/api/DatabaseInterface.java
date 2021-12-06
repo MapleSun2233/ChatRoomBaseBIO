@@ -2,20 +2,19 @@ package database.api;
 
 import database.Connector;
 import database.model.User;
-
-import javax.xml.transform.Result;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class DatabaseInterface {
-    public static boolean addUser(String username,String password){
-        String sql = "insert into user values (?,?)";
+    public static boolean addUser(String username,String password,String email){
+        String sql = "insert into user values (?,?,?)";
         boolean flag = false;
         try(PreparedStatement statement = Connector.getConnection().prepareStatement(sql)){
             statement.setString(1,username);
             statement.setString(2,password);
+            statement.setString(3,email);
             flag = statement.executeUpdate() == 1;
         }catch (SQLException e){
             System.out.println("数据库异常或账户已经存在！");
@@ -37,12 +36,13 @@ public class DatabaseInterface {
         }
         return flag;
     }
-    public static boolean updateUser(String username,String password){
-        String sql = "update user set password = ? where username= ?";
+    public static boolean updateUser(String username,String password,String email){
+        String sql = "update user set password = ?,email = ? where username= ?";
         boolean flag = false;
         try(PreparedStatement statement = Connector.getConnection().prepareStatement(sql)){
             statement.setString(1,password);
-            statement.setString(2,username);
+            statement.setString(2,email);
+            statement.setString(3,username);
             flag = statement.executeUpdate() == 1;
         }catch (SQLException e){
             System.out.println("数据库异常或账户不存在！");
@@ -65,11 +65,11 @@ public class DatabaseInterface {
         return null;
     }
     public static User queryAUser(String username){
-        String sql = "select username,password from user where username = ?";
+        String sql = "select username,password,email from user where username = ?";
         try(PreparedStatement statement = Connector.getConnection().prepareStatement(sql)){
             statement.setString(1,username);
             ResultSet set = statement.executeQuery();
-            while(set.next()) return new User(set.getString(1),set.getString(2));
+            while(set.next()) return new User(set.getString(1),set.getString(2),set.getString(3));
         }catch (SQLException e){
             System.out.println("数据库异常");
         }finally {

@@ -45,17 +45,23 @@ public class UpdateUserEvent extends MouseAdapter {
                 JDialog updateDialog = new JDialog(dialog);
                 updateDialog.setModal(true);
                 updateDialog.setTitle("修改用户");
-                updateDialog.setBounds(300,300,300,200);
+                updateDialog.setBounds(300,300,300,240);
                 updateDialog.setLayout(null);
                 JLabel label1 = new JLabel("密码：");
                 label1.setBounds(20,20,60,30);
                 JPasswordField pass = new JPasswordField("");
                 pass.setBounds(90,20,180,30);
+                JLabel label2 = new JLabel("邮箱：");
+                label2.setBounds(20,60,60,30);
+                JTextField email = new JTextField("");
+                email.setBounds(90,60,180,30);
                 JButton button = new JButton("修改");
-                button.setBounds(100,90,100,30);
-                button.addMouseListener(new UpdateClick(updateDialog,username,pass));
+                button.setBounds(100,130,100,30);
+                button.addMouseListener(new UpdateClick(updateDialog,username,pass,email));
                 updateDialog.add(label1);
                 updateDialog.add(pass);
+                updateDialog.add(label2);
+                updateDialog.add(email);
                 updateDialog.add(button);
                 updateDialog.setVisible(true);
             }else{
@@ -66,21 +72,26 @@ public class UpdateUserEvent extends MouseAdapter {
             private JDialog updateDialog;
             private String username;
             private JPasswordField pass;
+            private JTextField email;
 
-            public UpdateClick(JDialog updateDialog, String username, JPasswordField pass) {
+            public UpdateClick(JDialog updateDialog, String username, JPasswordField pass,JTextField email) {
                 this.updateDialog = updateDialog;
                 this.username = username;
                 this.pass = pass;
+                this.email = email;
             }
 
             @Override
             public void mouseClicked(MouseEvent e) {
                 char[] passArr = pass.getPassword();
-                if(passArr.length == 0){
-                    JOptionPane.showMessageDialog(updateDialog,"请输入新密码再执行此操作!");
+                String emailAddress = email.getText();
+                if(passArr.length == 0 || emailAddress.length() == 0){
+                    JOptionPane.showMessageDialog(updateDialog,"所有字段必须填写!");
+                }else if(!emailAddress.matches("^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$")){
+                    JOptionPane.showMessageDialog(updateDialog,"邮箱地址不合法!");
                 }else{
                     String password = String.valueOf(passArr);
-                    if(DatabaseInterface.updateUser(username,password)){
+                    if(DatabaseInterface.updateUser(username,password,emailAddress)){
                         JOptionPane.showMessageDialog(updateDialog,"修改成功！");
                         updateDialog.dispose();
                     }else{

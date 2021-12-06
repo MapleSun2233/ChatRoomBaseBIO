@@ -79,7 +79,7 @@ public class ClientControlThread extends Thread{
     }
 
     /**
-     * 往每个用户发送在线用户链表
+     * 往每个用户发送在线用户列表
      */
     public void sendUserList() {
         StringBuilder nameList = new StringBuilder();//用于存放在线用户列表

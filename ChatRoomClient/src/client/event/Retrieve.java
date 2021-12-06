@@ -6,11 +6,11 @@ import java.awt.event.MouseEvent;
 import java.io.*;
 import java.net.Socket;
 
-public class Register extends MouseAdapter {
+public class Retrieve extends MouseAdapter {
     private JFrame frame;
     private JTextField address;
 
-    public Register(JFrame frame, JTextField address) {
+    public Retrieve(JFrame frame, JTextField address) {
         this.frame = frame;
         this.address = address;
     }
@@ -25,22 +25,22 @@ public class Register extends MouseAdapter {
                 Socket socket = new Socket(addressInfo[0],Integer.valueOf(addressInfo[1]));
                 JDialog dialog = new JDialog(frame);
                 dialog.setModal(true);
-                dialog.setTitle("注册用户");
+                dialog.setTitle("找回密码");
                 dialog.setBounds(300,300,300,240);
                 dialog.setLayout(null);
                 JLabel label1 = new JLabel("账号：");
                 label1.setBounds(20,20,60,30);
-                JLabel label2 = new JLabel("密码：");
+                JLabel label2 = new JLabel("邮箱：");
                 label2.setBounds(20,60,60,30);
-                JLabel label3 = new JLabel("邮箱：");
+                JLabel label3 = new JLabel("密码：");
                 label3.setBounds(20,100,60,30);
-                JTextField user = new JTextField("");
+                JTextField user = new JTextField("输入需要重置的目标账户");
                 user.setBounds(90,20,180,30);
+                JTextField email = new JTextField("输入注册时的邮箱地址");
+                email.setBounds(90,60,180,30);
                 JPasswordField pass = new JPasswordField("");
-                pass.setBounds(90,60,180,30);
-                JTextField email = new JTextField("");
-                email.setBounds(90,100,180,30);
-                JButton button = new JButton("注册");
+                pass.setBounds(90,100,180,30);
+                JButton button = new JButton("找回密码");
                 button.setBounds(100,150,100,30);
                 button.addMouseListener(new MouseAdapter() {
                     @Override
@@ -56,13 +56,18 @@ public class Register extends MouseAdapter {
                             try {
                                 BufferedWriter clientOS = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                                 BufferedReader clientIS = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                                clientOS.write(String.format("r&&%s %s %s\n",username,password,emailAddress));
+                                clientOS.write(String.format("rp&&%s %s %s\n",username,password,emailAddress));
                                 clientOS.flush();
-                                // 验证注册结果
-                                if(clientIS.readLine().indexOf("successfully") != -1){
-                                    JOptionPane.showMessageDialog(dialog,"注册成功！");
+                                // 验证找回结果
+                                String receivedMsg = clientIS.readLine();
+                                if(receivedMsg.indexOf("successfully") != -1){
+                                    JOptionPane.showMessageDialog(dialog,"找回密码成功！");
+                                }else if(receivedMsg.indexOf("email") != -1){
+                                    JOptionPane.showMessageDialog(dialog,"找回密码失败！邮箱地址不是注册时的预留地址！");
+                                }else if(receivedMsg.indexOf("account") != -1){
+                                    JOptionPane.showMessageDialog(dialog,"找回密码失败，不存在此用户！");
                                 }else{
-                                    JOptionPane.showMessageDialog(dialog,"注册失败，已存在此用户！");
+                                    JOptionPane.showMessageDialog(dialog,"其他未知错误！");
                                 }
                                 clientIS.close();
                                 clientOS.close();
