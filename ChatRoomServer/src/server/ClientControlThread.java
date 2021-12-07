@@ -1,5 +1,8 @@
 package server;
 
+import database.api.DatabaseInterface;
+import database.model.User;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.EOFException;
@@ -101,7 +104,26 @@ public class ClientControlThread extends Thread{
             while (beConnected){
                 message=is.readLine();
                 if(message!=null)
-                    if(message.startsWith("@")){
+                    if(message.startsWith("u$")){
+                        String[] passes =  message.substring(2).split("&");
+                        User user = DatabaseInterface.queryAUser(this.username);
+                        if(user.getPassword().equals(passes[0])){
+                            boolean flag = DatabaseInterface.updateUserPassword(this.username,passes[1]);
+                            if(flag) os.write("u$true");
+                            else os.write("u$false");
+                        }else{
+                            os.write("u$oldPasswordError");
+                        }
+                        os.newLine();
+                        os.flush();
+                    }else if(message.startsWith("d$")){
+                        String user =  message.substring(2);
+                        if(DatabaseInterface.deleteUser(user))
+                            os.write("d$true");
+                        else os.write("d$false");
+                        os.newLine();
+                        os.flush();
+                    }else if(message.startsWith("@")){
                         String[] sendToOneInfo = message.substring(1).split("&");
                         sendToOne(sendToOneInfo);
                     }else

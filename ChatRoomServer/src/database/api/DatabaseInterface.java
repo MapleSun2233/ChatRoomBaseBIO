@@ -51,6 +51,20 @@ public class DatabaseInterface {
         }
         return flag;
     }
+    public static boolean updateUserPassword(String username,String password){
+        String sql = "update user set password = ? where username= ?";
+        boolean flag = false;
+        try(PreparedStatement statement = Connector.getConnection().prepareStatement(sql)){
+            statement.setString(1,password);
+            statement.setString(2,username);
+            flag = statement.executeUpdate() == 1;
+        }catch (SQLException e){
+            System.out.println("数据库异常或账户不存在！");
+        }finally {
+            Connector.closeConnection();
+        }
+        return flag;
+    }
     public static String[] queryUsers(){
         ArrayList<String> list = new ArrayList<>();
         try{

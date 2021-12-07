@@ -50,12 +50,10 @@ public class ServerSocketThread implements Runnable{
                     User user = DatabaseInterface.queryAUser(loginInfo[0]);
                     if(user == null){
                         clientOS.write("account is not exist");
-                    }else if(!user.getEmail().equals(loginInfo[2])){
+                    }else if(!user.getEmail().equals(loginInfo[1])){
                         clientOS.write("email is wrong");
-                    }else if(DatabaseInterface.updateUser(loginInfo[0],loginInfo[1],loginInfo[2])){
-                        clientOS.write("retrieve successfully");
                     }else{
-                        clientOS.write("other error");
+                        clientOS.write(String.format("p&%s",user.getPassword()));
                     }
                     clientOS.newLine();
                     clientOS.flush();
