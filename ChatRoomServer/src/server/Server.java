@@ -35,7 +35,7 @@ public class Server extends JFrame{
         this.add(queryUser);
         this.add(portLabel);
         this.setVisible(true);
-        // 将socket服务以守护线程形式加入到主线程中
+        // 开始socket服务端线程
         new Thread(new ServerSocketThread(Integer.valueOf(port))).start();
         JOptionPane.showMessageDialog(this,"请勿关闭服务端窗口，否则将停止服务！");
     }
