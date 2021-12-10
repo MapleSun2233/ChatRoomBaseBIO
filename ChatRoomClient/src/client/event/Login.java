@@ -42,10 +42,14 @@ public class Login extends MouseAdapter {
                 button.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        String username = user.getText();
-                        String password = String.valueOf(pass.getPassword());
+                        String username = user.getText().trim();
+                        String password = String.valueOf(pass.getPassword()).trim();
                         if(username.length() == 0 || password.length() == 0){
                             JOptionPane.showMessageDialog(dialog,"账户和密码不能为空！");
+                        }else if(!username.matches("[A-Za-z0-9_\\u4e00-\\u9fa5]+")){
+                            JOptionPane.showMessageDialog(dialog,"用户名含有非法字符！");
+                        }else if(!password.matches("[A-Za-z0-9_]+")){
+                            JOptionPane.showMessageDialog(dialog,"密码含有非法字符！");
                         }else{
                             try {
                                 BufferedWriter clientOS = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));

@@ -41,10 +41,12 @@ public class Retrieve extends MouseAdapter {
                 button.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        String username = user.getText();
-                        String emailAddress = email.getText();
+                        String username = user.getText().trim();
+                        String emailAddress = email.getText().trim();
                         if(username.length() == 0 || emailAddress.length() == 0){
                             JOptionPane.showMessageDialog(dialog,"所有字段不能为空！");
+                        }else if(!username.matches("[A-Za-z0-9_\\u4e00-\\u9fa5]+")){
+                            JOptionPane.showMessageDialog(dialog,"用户名含有非法字符！");
                         }else if(!emailAddress.matches("^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$")){
                             JOptionPane.showMessageDialog(dialog,"邮箱地址不合法！");
                         }else{

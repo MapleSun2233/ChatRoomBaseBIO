@@ -67,17 +67,19 @@ public class UpdateUserEvent implements ActionListener {
         public void mouseClicked(MouseEvent e) {
             String oldPassword = String.valueOf(oldPass.getPassword()).trim();
             String newPassword = String.valueOf(newPass.getPassword()).trim();
-            if(oldPassword.length() > 0 && newPassword.length() > 0){
-                try {
-                    clientOS.write(String.format("u$%s&%s",oldPassword,newPassword));
-                    clientOS.newLine();
-                    clientOS.flush();
-                    dialog.dispose();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }else{
+            if(oldPassword.length() == 0 && newPassword.length() == 0){
                 JOptionPane.showMessageDialog(dialog,"所有字段必须填写！");
+            }else if(!newPassword.matches("[A-Za-z0-9_]+") || !oldPassword.matches("[A-Za-z0-9_]+")){
+                JOptionPane.showMessageDialog(dialog,"密码含有非法字符！");
+            }else{
+                try {
+                        clientOS.write(String.format("u$%s&%s",oldPassword,newPassword));
+                        clientOS.newLine();
+                        clientOS.flush();
+                        dialog.dispose();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                }
             }
         }
     }

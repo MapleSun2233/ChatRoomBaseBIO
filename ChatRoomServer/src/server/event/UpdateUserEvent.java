@@ -83,14 +83,15 @@ public class UpdateUserEvent extends MouseAdapter {
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                char[] passArr = pass.getPassword();
-                String emailAddress = email.getText();
-                if(passArr.length == 0 || emailAddress.length() == 0){
+                String password = String.valueOf(pass.getPassword()).trim();
+                String emailAddress = email.getText().trim();
+                if(password.length() == 0 || emailAddress.length() == 0){
                     JOptionPane.showMessageDialog(updateDialog,"所有字段必须填写!");
+                }else if(!password.matches("[A-Za-z0-9_]+")){
+                    JOptionPane.showMessageDialog(dialog,"密码含有非法字符！");
                 }else if(!emailAddress.matches("^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$")){
                     JOptionPane.showMessageDialog(updateDialog,"邮箱地址不合法!");
                 }else{
-                    String password = String.valueOf(passArr);
                     if(DatabaseInterface.updateUser(username,password,emailAddress)){
                         JOptionPane.showMessageDialog(updateDialog,"修改成功！");
                         updateDialog.dispose();
