@@ -1,6 +1,6 @@
 package server.event;
 
-import database.api.DatabaseInterface;
+import database.api.DAO;
 import server.UserTableModel;
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
@@ -41,7 +41,7 @@ public class DeleteUserEvent extends MouseAdapter {
         public void mouseClicked(MouseEvent e) {
             int rowIndex = table.getSelectedRow();
             if(rowIndex!=-1){
-                if(DatabaseInterface.deleteUser((String)table.getValueAt(rowIndex,0))){
+                if(DAO.deleteUser((String)table.getValueAt(rowIndex,0))){
                     JOptionPane.showMessageDialog(dialog,"删除成功！");
                     dialog.dispose();
                 }else{

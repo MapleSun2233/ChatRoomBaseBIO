@@ -1,7 +1,9 @@
 package server;
 
-import database.api.DatabaseInterface;
+import database.api.DAO;
 import database.model.User;
+import utils.Message;
+import utils.MsgType;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -24,60 +26,59 @@ public class ServerSocketThread implements Runnable{
     public void run() {
         while(true){
             Socket clientSocket = null;
-            BufferedReader clientIS = null;
-            BufferedWriter clientOS = null;
+            ObjectInputStream clientIS = null;
+            ObjectOutputStream clientOS = null;
             try {
                 clientSocket = socket.accept(); // 接受一个连接
-                clientIS = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                clientOS = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-                String receivedAccountInfo = clientIS.readLine();
-                if(receivedAccountInfo.startsWith("r&&")){ // 注册任务
-                    receivedAccountInfo = receivedAccountInfo.substring(3);
-                    String[] loginInfo = receivedAccountInfo.split(" ");
-                    if(DatabaseInterface.addUser(loginInfo[0],loginInfo[1],loginInfo[2])){
-                        clientOS.write("register successfully");
-                    }else{
-                        clientOS.write("account had existed");
-                    }
-                    clientOS.newLine();
-                    clientOS.flush();
-                    clientIS.close();
-                    clientOS.close();
-                    clientSocket.close();
-                }else if(receivedAccountInfo.startsWith("rp&&")){ // 找回密码任务
-                    receivedAccountInfo = receivedAccountInfo.substring(4);
-                    String[] loginInfo = receivedAccountInfo.split(" ");
-                    User user = DatabaseInterface.queryAUser(loginInfo[0]);
-                    if(user == null){
-                        clientOS.write("account is not exist");
-                    }else if(!user.getEmail().equals(loginInfo[1])){
-                        clientOS.write("email is wrong");
-                    }else{
-                        clientOS.write(String.format("p&%s",user.getPassword()));
-                    }
-                    clientOS.newLine();
-                    clientOS.flush();
-                    clientIS.close();
-                    clientOS.close();
-                    clientSocket.close();
-                }else{ // 登录任务
-                    String[] loginInfo = receivedAccountInfo.split(" ");
-                    User user = DatabaseInterface.queryAUser(loginInfo[0]);
-                    if(user == null){
-                        loginFail(clientSocket,clientIS,clientOS,"account is not exist");
-                    }else if(isLogined(user.getUsername())){
-                        loginFail(clientSocket,clientIS,clientOS,"account had login");
-                    }else if(!user.getPassword().equals(loginInfo[1])){
-                        loginFail(clientSocket,clientIS,clientOS,"password error");
-                    }else{
-                        ClientControlThread ccThread = new ClientControlThread(clients,clientSocket,clientIS,clientOS,loginInfo[0]);
-                        clients.add(ccThread);
-                        ccThread.start();
-                        clientOS.write("login successfully\n");
+                clientOS = new ObjectOutputStream(clientSocket.getOutputStream());
+                clientIS = new ObjectInputStream(clientSocket.getInputStream());
+                Message message = (Message) clientIS.readObject();
+                switch (message.getType()){
+                    case REGISTER_USER:
+                        String[] registerInfo = message.getContent().split(" ");
+                        if(DAO.addUser(registerInfo[0],registerInfo[1],registerInfo[2])){
+                            clientOS.writeObject(new Message(MsgType.REGISTER_USER,"register successfully"));
+                        }else{
+                            clientOS.writeObject(new Message(MsgType.REGISTER_USER,"account had existed"));
+                        }
                         clientOS.flush();
-                    }
+                        clientIS.close();
+                        clientOS.close();
+                        clientSocket.close();
+                        break;
+                    case LOGIN_USER:
+                        String[] loginInfo = message.getContent().split(" ");
+                        User existUser = DAO.queryAUser(loginInfo[0]);
+                        if(existUser == null){
+                            loginFail(clientSocket,clientIS,clientOS,"account is not exist");
+                        }else if(isLogined(existUser.getUsername())){
+                            loginFail(clientSocket,clientIS,clientOS,"account had login");
+                        }else if(!existUser.getPassword().equals(loginInfo[1])){
+                            loginFail(clientSocket,clientIS,clientOS,"password error");
+                        }else{
+                            System.out.println(loginInfo[0]+"上线了！");
+                            ClientControlThread ccThread = new ClientControlThread(clients,clientSocket,clientIS,clientOS,loginInfo[0]);
+                            clients.add(ccThread);
+                            ccThread.start();
+                            clientOS.writeObject(new Message(MsgType.LOGIN_USER,"login successfully"));
+                        }
+                        break;
+                    case RETRIEVE_USER:
+                        String[] retrieveInfo = message.getContent().split(" ");
+                        User user = DAO.queryAUser(retrieveInfo[0]);
+                        if(user == null){
+                            clientOS.writeObject(new Message(MsgType.RETRIEVE_USER,"account is not exist"));
+                        }else if(!user.getEmail().equals(retrieveInfo[1])){
+                            clientOS.writeObject(new Message(MsgType.RETRIEVE_USER,"email is wrong"));
+                        }else{
+                            clientOS.writeObject(new Message(MsgType.RETRIEVE_USER,String.format("p&%s",user.getPassword())));
+                        }
+                        clientIS.close();
+                        clientOS.close();
+                        clientSocket.close();
+                        break;
                 }
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 try {
                     loginFail(clientSocket,clientIS,clientOS,"socket连接异常");
                 } catch (IOException ex) {
@@ -92,11 +93,9 @@ public class ServerSocketThread implements Runnable{
                 return true;
         return false;
     }
-    public void loginFail(Socket clientSocket,BufferedReader clientIS,BufferedWriter clientOS,String msg) throws IOException {
+    public void loginFail(Socket clientSocket,ObjectInputStream clientIS,ObjectOutputStream clientOS,String msg) throws IOException {
         if(clientOS!=null){
-            clientOS.write(msg);
-            clientOS.newLine();
-            clientOS.flush();
+            clientOS.writeObject(new Message(MsgType.LOGIN_USER,msg));
             clientOS.close();
         }
         if(clientIS!=null)clientIS.close();

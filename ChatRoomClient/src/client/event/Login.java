@@ -1,6 +1,8 @@
 package client.event;
 
 import client.ChatRoomThread;
+import utils.Message;
+import utils.MsgType;
 
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
@@ -24,6 +26,8 @@ public class Login extends MouseAdapter {
         }else{
             try {
                 Socket socket = new Socket(addressInfo[0],Integer.valueOf(addressInfo[1]));
+                ObjectOutputStream clientOS = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream clientIS = new ObjectInputStream(socket.getInputStream());
                 JDialog dialog = new JDialog(frame);
                 dialog.setModal(true);
                 dialog.setTitle("登录聊天室");
@@ -51,39 +55,29 @@ public class Login extends MouseAdapter {
                         }else if(!password.matches("[A-Za-z0-9_]+")){
                             JOptionPane.showMessageDialog(dialog,"密码含有非法字符！");
                         }else{
-                            try {
-                                BufferedWriter clientOS = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                                BufferedReader clientIS = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                                clientOS.write(String.format("%s %s\n",username,password));
-                                clientOS.flush();
-                                // 验证登录结果
-                                String receivedMsg = clientIS.readLine();
+                            try{
+                                clientOS.writeObject(new Message(MsgType.LOGIN_USER,String.format("%s %s",username,password)));
+                                Message message = (Message)clientIS.readObject();
+                                String receivedMsg = message.getContent();
                                 if(receivedMsg.indexOf("successfully") != -1){
                                     JOptionPane.showMessageDialog(dialog,"登录成功！");
                                     // 加入到聊天线程中
                                     new Thread(new ChatRoomThread(socket,clientIS,clientOS,username)).start();
                                     dialog.dispose();
                                     frame.dispose();
-                                }else if(receivedMsg.indexOf("error") != -1){
-                                    JOptionPane.showMessageDialog(dialog,"登录失败，密码错误！");
-                                    clientIS.close();
-                                    clientOS.close();
-                                    socket.close();
-                                    dialog.dispose();
-                                }else if(receivedMsg.indexOf("login") != -1){
-                                    JOptionPane.showMessageDialog(dialog,"登录失败，此账户已在线！");
-                                    clientIS.close();
-                                    clientOS.close();
-                                    socket.close();
-                                    dialog.dispose();
                                 }else{
-                                    JOptionPane.showMessageDialog(dialog,"登录失败，账户不存在！");
+                                    if(receivedMsg.indexOf("error") != -1)
+                                        JOptionPane.showMessageDialog(dialog,"登录失败，密码错误！");
+                                    else if(receivedMsg.indexOf("login") != -1)
+                                        JOptionPane.showMessageDialog(dialog,"登录失败，此账户已在线！");
+                                    else
+                                        JOptionPane.showMessageDialog(dialog,"登录失败，账户不存在！");
                                     clientIS.close();
                                     clientOS.close();
                                     socket.close();
                                     dialog.dispose();
                                 }
-                            } catch (IOException ex) {
+                            }catch (IOException | ClassNotFoundException ex){
                                 System.out.println("socket发生错误！");
                             }
                         }

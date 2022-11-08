@@ -1,5 +1,8 @@
 package client.event;
 
+import utils.Message;
+import utils.MsgType;
+
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -58,21 +61,25 @@ public class Register extends MouseAdapter {
                             JOptionPane.showMessageDialog(dialog,"邮箱地址不合法！");
                         }else{
                             try {
-                                BufferedWriter clientOS = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                                BufferedReader clientIS = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                                clientOS.write(String.format("r&&%s %s %s\n",username,password,emailAddress));
-                                clientOS.flush();
+                                ObjectOutputStream clientOS = new ObjectOutputStream(socket.getOutputStream());
+                                ObjectInputStream clientIS = new ObjectInputStream(socket.getInputStream());
+                                Message message = new Message(MsgType.REGISTER_USER,String.format("%s %s %s",username,password,emailAddress));
+                                clientOS.writeObject(message);
                                 // 验证注册结果
-                                if(clientIS.readLine().indexOf("successfully") != -1){
-                                    JOptionPane.showMessageDialog(dialog,"注册成功！");
-                                }else{
-                                    JOptionPane.showMessageDialog(dialog,"注册失败，已存在此用户！");
+                                message = (Message) clientIS.readObject();
+                                switch (message.getType()){
+                                    case REGISTER_USER:
+                                        if(message.getContent().indexOf("successfully") != -1)
+                                            JOptionPane.showMessageDialog(dialog,"注册成功！");
+                                        else
+                                            JOptionPane.showMessageDialog(dialog,"注册失败，已存在此用户！");
+                                        break;
                                 }
                                 clientIS.close();
                                 clientOS.close();
                                 socket.close();
                                 dialog.dispose();
-                            } catch (IOException ex) {
+                            } catch (IOException | ClassNotFoundException ex) {
                                 System.out.println("socket发生错误！");
                             }
                         }

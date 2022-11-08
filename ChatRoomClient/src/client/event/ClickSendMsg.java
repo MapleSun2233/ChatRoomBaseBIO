@@ -1,18 +1,21 @@
 package client.event;
 
+import utils.Message;
+import utils.MsgType;
+
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 
 public class ClickSendMsg extends MouseAdapter {
-    private BufferedWriter clientOS;
+    private ObjectOutputStream clientOS;
     private JTextArea content;
     private JTextArea sendMsgContent;
     private JComboBox<String> contactTo;
 
-    public ClickSendMsg(BufferedWriter clientOS, JTextArea content, JTextArea sendMsgContent, JComboBox<String> contactTo) {
+    public ClickSendMsg(ObjectOutputStream clientOS, JTextArea content, JTextArea sendMsgContent, JComboBox<String> contactTo) {
         this.clientOS = clientOS;
         this.content = content;
         this.sendMsgContent = sendMsgContent;
@@ -25,13 +28,11 @@ public class ClickSendMsg extends MouseAdapter {
             try {
                 String contactToWho = (String)contactTo.getSelectedItem();
                 if(contactToWho.equals("全部"))
-                    clientOS.write(str);
+                    clientOS.writeObject(new Message(MsgType.PUBLIC_MSG,str));
                 else{
-                    clientOS.write(String.format("@%s&%s",contactToWho,str));
+                    clientOS.writeObject(new Message(MsgType.PRIVATE_MSG,String.format("%s&%s",contactToWho,str)));
                     content.setText(content.getText()+String.format("本账户发送给%s的私信：%s",contactToWho,str)+'\n');//更新聊天内容
                 }
-                clientOS.newLine();
-                clientOS.flush();
             } catch (IOException ex) {
                 ex.printStackTrace();
             }

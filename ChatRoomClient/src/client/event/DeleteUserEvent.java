@@ -1,17 +1,19 @@
 package client.event;
 
+import utils.Message;
+import utils.MsgType;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 
 public class DeleteUserEvent implements ActionListener {
     private JFrame frame;
     private String username;
-    private BufferedWriter clientOS;
-    public DeleteUserEvent(JFrame frame, BufferedWriter clientOS, String username) {
+    private ObjectOutputStream clientOS;
+    public DeleteUserEvent(JFrame frame, ObjectOutputStream clientOS, String username) {
         this.frame = frame;
         this.username = username;
         this.clientOS = clientOS;
@@ -22,9 +24,7 @@ public class DeleteUserEvent implements ActionListener {
         if(JOptionPane.showConfirmDialog(frame, "此账户将被删除！确认要注销此账户吗？")==0){
             // 注销业务
             try {
-                clientOS.write(String.format("d$%s",this.username));
-                clientOS.newLine();
-                clientOS.flush();
+                clientOS.writeObject(new Message(MsgType.DELETE_USER,this.username));
             } catch (IOException ex) {
                 ex.printStackTrace();
             }

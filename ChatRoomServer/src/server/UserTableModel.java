@@ -1,7 +1,6 @@
 package server;
 
-import database.Connector;
-import database.api.DatabaseInterface;
+import database.api.DAO;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -11,7 +10,7 @@ public class UserTableModel extends AbstractTableModel {
 
     public UserTableModel() {
         this.columnNames = new String[]{"账户"};
-        this.users = DatabaseInterface.queryUsers();
+        this.users = DAO.queryUsers();
     }
 
     @Override

@@ -1,5 +1,8 @@
 package client.event;
 
+import utils.Message;
+import utils.MsgType;
+
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -51,12 +54,12 @@ public class Retrieve extends MouseAdapter {
                             JOptionPane.showMessageDialog(dialog,"邮箱地址不合法！");
                         }else{
                             try {
-                                BufferedWriter clientOS = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                                BufferedReader clientIS = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                                clientOS.write(String.format("rp&&%s %s\n",username,emailAddress));
-                                clientOS.flush();
+                                ObjectOutputStream clientOS = new ObjectOutputStream(socket.getOutputStream());
+                                ObjectInputStream clientIS = new ObjectInputStream(socket.getInputStream());
+                                clientOS.writeObject(new Message(MsgType.RETRIEVE_USER,String.format("%s %s",username,emailAddress)));
                                 // 验证找回结果
-                                String receivedMsg = clientIS.readLine();
+                                Message message = (Message) clientIS.readObject();
+                                String receivedMsg = message.getContent();
                                 if(receivedMsg.indexOf("email") != -1){
                                     JOptionPane.showMessageDialog(dialog,"找回密码失败！邮箱地址不是注册时的预留地址！");
                                 }else if(receivedMsg.indexOf("account") != -1){
@@ -70,7 +73,7 @@ public class Retrieve extends MouseAdapter {
                                 clientOS.close();
                                 socket.close();
                                 dialog.dispose();
-                            } catch (IOException ex) {
+                            } catch (IOException | ClassNotFoundException ex) {
                                 System.out.println("socket发生错误！");
                             }
                         }

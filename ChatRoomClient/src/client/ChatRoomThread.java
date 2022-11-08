@@ -4,6 +4,7 @@ import client.event.ClickSendMsg;
 import client.event.DeleteUserEvent;
 import client.event.EnterSendMsg;
 import client.event.UpdateUserEvent;
+import utils.Message;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,8 +17,8 @@ import java.net.SocketException;
  */
 public class ChatRoomThread extends JFrame implements Runnable{
     private Socket socket;
-    private BufferedReader clientIS;
-    private BufferedWriter clientOS;
+    private ObjectInputStream clientIS;
+    private ObjectOutputStream clientOS;
     private JLabel listTitle = new JLabel("在线用户列表");
     private JTextArea list = new JTextArea();
     private JLabel contentTitle = new JLabel("聊天记录");
@@ -29,7 +30,7 @@ public class ChatRoomThread extends JFrame implements Runnable{
     private JComboBox<String> contactTo = new JComboBox<>();
     private String username;
     private JMenuBar jb = new JMenuBar();
-    public ChatRoomThread(Socket socket, BufferedReader clientIS, BufferedWriter clientOS, String username){
+    public ChatRoomThread(Socket socket, ObjectInputStream clientIS, ObjectOutputStream clientOS, String username){
         this.socket = socket;
         this.clientIS = clientIS;
         this.clientOS = clientOS;
@@ -79,10 +80,10 @@ public class ChatRoomThread extends JFrame implements Runnable{
     public void run() { // 开始消息处理线程
         try{
             while (true){
-                String str=clientIS.readLine().trim();//读取服务器的信息
-                if (str!=null) {
-                    if(str.startsWith("ul&")){ // 处理用户列表信息
-                        String[] userList =  str.substring(3).split("&");
+                Message message = (Message)clientIS.readObject() ;//读取服务器的信息
+                switch (message.getType()){
+                    case USER_LIST:
+                        String[] userList =  message.getContent().split("&");
                         this.contactTo.removeAllItems(); // 重置下拉列表
                         this.contactTo.addItem("全部");
                         for(String user : userList) if(!user.equals(username))this.contactTo.addItem(user);
@@ -95,26 +96,31 @@ public class ChatRoomThread extends JFrame implements Runnable{
                                 sb.append(String.format("%s\n",userList[i]));
                         list.setText(sb.toString());
                         userListScrollPane.getVerticalScrollBar().setValue(userListScrollPane.getVerticalScrollBar().getMaximum());
-                    }else if(str.startsWith("u$")){ // 处理修改密码结果
-                        if(str.indexOf("true") != -1)
+                        break;
+                    case UPDATE_USER:
+                        String keyWord = message.getContent();
+                        if(keyWord.indexOf("true") != -1)
                             JOptionPane.showMessageDialog(this,"修改密码成功！");
-                        else if(str.indexOf("old") != -1)
+                        else if(keyWord.indexOf("old") != -1)
                             JOptionPane.showMessageDialog(this,"旧密码错误！");
                         else
                             JOptionPane.showMessageDialog(this,"修改密码失败！");
-                    }else if(str.startsWith("d$")){ // 处理注销账户结果
-                        if(str.indexOf("false") != -1) {
+                        break;
+                    case DELETE_USER:
+                        if(message.getContent().indexOf("false") != -1) {
                             JOptionPane.showMessageDialog(this,"注销失败！");
                         }else{
                             JOptionPane.showMessageDialog(this,"注销成功！");
                             this.dispose();
                             System.exit(0);
                         }
-                    }else{
+                        break;
+                    case PRIVATE_MSG:
+                    case PUBLIC_MSG:
                         // 处理聊天信息
-                        content.setText(content.getText()+str+'\n');
+                        content.setText(content.getText()+message.getContent()+'\n');
                         contentScrollPane.getVerticalScrollBar().setValue(contentScrollPane.getVerticalScrollBar().getMaximum());
-                    }
+                        break;
                 }
             }
         } catch (SocketException e) {
@@ -123,6 +129,8 @@ public class ChatRoomThread extends JFrame implements Runnable{
             System.out.println("终止异常");
         } catch(IOException e){
             System.out.println("IO异常");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
     }
 }

@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class DatabaseInterface {
+public class DAO {
     public static boolean addUser(String username,String password,String email){
         String sql = "insert into user values (?,?,?)";
         boolean flag = false;

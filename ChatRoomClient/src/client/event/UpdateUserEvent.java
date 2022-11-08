@@ -1,20 +1,21 @@
 package client.event;
 
+import utils.Message;
+import utils.MsgType;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
+import java.io.*;
 
 public class UpdateUserEvent implements ActionListener {
     private JFrame frame;
     private String username;
-    private BufferedReader clientIS;
-    private BufferedWriter clientOS;
-    public UpdateUserEvent(JFrame frame, BufferedReader clientIS, BufferedWriter clientOS,String username){
+    private ObjectInputStream clientIS;
+    private ObjectOutputStream clientOS;
+    public UpdateUserEvent(JFrame frame, ObjectInputStream clientIS, ObjectOutputStream clientOS,String username){
         this.frame = frame;
         this.username = username;
         this.clientIS = clientIS;
@@ -73,9 +74,7 @@ public class UpdateUserEvent implements ActionListener {
                 JOptionPane.showMessageDialog(dialog,"密码含有非法字符！");
             }else{
                 try {
-                        clientOS.write(String.format("u$%s&%s",oldPassword,newPassword));
-                        clientOS.newLine();
-                        clientOS.flush();
+                        clientOS.writeObject(new Message(MsgType.UPDATE_USER,String.format("%s&%s",oldPassword,newPassword)));
                         dialog.dispose();
                     } catch (IOException ex) {
                         ex.printStackTrace();

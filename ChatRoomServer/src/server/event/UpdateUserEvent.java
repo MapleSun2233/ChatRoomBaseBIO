@@ -1,6 +1,6 @@
 package server.event;
 
-import database.api.DatabaseInterface;
+import database.api.DAO;
 import server.UserTableModel;
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
@@ -92,7 +92,7 @@ public class UpdateUserEvent extends MouseAdapter {
                 }else if(!emailAddress.matches("^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$")){
                     JOptionPane.showMessageDialog(updateDialog,"邮箱地址不合法!");
                 }else{
-                    if(DatabaseInterface.updateUser(username,password,emailAddress)){
+                    if(DAO.updateUser(username,password,emailAddress)){
                         JOptionPane.showMessageDialog(updateDialog,"修改成功！");
                         updateDialog.dispose();
                     }else{

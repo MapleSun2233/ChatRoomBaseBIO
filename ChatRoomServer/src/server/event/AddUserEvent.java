@@ -1,6 +1,6 @@
 package server.event;
 
-import database.api.DatabaseInterface;
+import database.api.DAO;
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -66,7 +66,7 @@ public class AddUserEvent extends MouseAdapter {
             }else if(!emailAddress.matches("^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$")){
                 JOptionPane.showMessageDialog(dialog,"邮箱格式不合法！");
             }else{
-                if(DatabaseInterface.addUser(username,password,emailAddress)){
+                if(DAO.addUser(username,password,emailAddress)){
                     JOptionPane.showMessageDialog(dialog,"添加成功！");
                     dialog.dispose();
                 }else{

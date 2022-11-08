@@ -1,14 +1,12 @@
 package server;
 
-import database.api.DatabaseInterface;
+import database.api.DAO;
 import database.model.User;
+import utils.Message;
+import utils.MsgType;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.EOFException;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.List;
 
 /**
@@ -17,12 +15,12 @@ import java.util.List;
 public class ClientControlThread extends Thread{
     private List<ClientControlThread> clients;
     private Socket socket;
-    private BufferedReader is;
-    private BufferedWriter os;
+    private ObjectInputStream is;
+    private ObjectOutputStream os;
     private String username;
     private boolean beConnected;
 
-    public ClientControlThread(List<ClientControlThread> clients, Socket socket, BufferedReader is, BufferedWriter os, String name) {
+    public ClientControlThread(List<ClientControlThread> clients, Socket socket, ObjectInputStream is, ObjectOutputStream os, String name) {
         this.clients = clients;
         this.socket = socket;
         this.is = is;
@@ -35,12 +33,10 @@ public class ClientControlThread extends Thread{
         return username;
     }
 
-    public void sendMessage(String message){
+    public void sendMessage(MsgType msgType,String message){
         try {
             for (ClientControlThread client : clients){
-                client.os.write(message);
-                client.os.newLine();
-                client.os.flush();
+                client.os.writeObject(new Message(msgType,message));
             }
         } catch (NullPointerException e) {
             System.out.println("发送信息失败");
@@ -48,14 +44,11 @@ public class ClientControlThread extends Thread{
             System.out.println("发送失败！");
         }
     }
-
     public void sendToOne(String[] info){
         try {
             for (ClientControlThread client : clients){
                 if(client.getUsername().equals(info[0])){
-                    client.os.write(String.format("%s发来的私信：%s",this.getUsername(),info[1]));
-                    client.os.newLine();
-                    client.os.flush();
+                    client.os.writeObject(new Message(MsgType.PRIVATE_MSG,String.format("%s发来的私信：%s",this.getUsername(),info[1])));
                 }
             }
         } catch (NullPointerException e) {
@@ -70,7 +63,7 @@ public class ClientControlThread extends Thread{
      */
     public void close() {
         clients.remove(this);
-        this.sendMessage(String.format("------%s下线了------",this.getUsername()));
+        this.sendMessage(MsgType.PUBLIC_MSG,String.format("------%s下线了------",this.getUsername()));
         this.sendUserList();
         try {
             if (is != null) is.close();
@@ -86,57 +79,56 @@ public class ClientControlThread extends Thread{
      */
     public void sendUserList() {
         StringBuilder nameList = new StringBuilder();//用于存放在线用户列表
-        nameList.append("ul&");
         int length = clients.size();
         for (int i = 0 ; i < length; i++) {
             nameList.append(clients.get(i).getUsername());
             if(i<length-1)
                 nameList.append('&');
         }
-        sendMessage(nameList.toString());
+        sendMessage(MsgType.USER_LIST,nameList.toString());
     }
 
     public void run() {
         try{
-            String message = null;//客户端发送过来的内容，服务器转发给所有用户
-            sendMessage(String.format("------%s上线了------",this.getUsername()));
+            Message message = null;//客户端发送过来的内容，服务器转发给所有用户
+            sendMessage(MsgType.PUBLIC_MSG,String.format("------%s上线了------",this.getUsername()));
             sendUserList();//发送新的用户列表
-            while (beConnected){
-                message=is.readLine();
-                if(message!=null)
-                    if(message.startsWith("u$")){
-                        String[] passes =  message.substring(2).split("&");
-                        User user = DatabaseInterface.queryAUser(this.username);
-                        if(user.getPassword().equals(passes[0])){
-                            boolean flag = DatabaseInterface.updateUserPassword(this.username,passes[1]);
-                            if(flag) os.write("u$true");
-                            else os.write("u$false");
-                        }else{
-                            os.write("u$oldPasswordError");
-                        }
-                        os.newLine();
-                        os.flush();
-                    }else if(message.startsWith("d$")){
-                        String user =  message.substring(2);
-                        if(DatabaseInterface.deleteUser(user))
-                            os.write("d$true");
-                        else os.write("d$false");
-                        os.newLine();
-                        os.flush();
-                    }else if(message.startsWith("@")){
-                        String[] sendToOneInfo = message.substring(1).split("&");
-                        sendToOne(sendToOneInfo);
-                    }else
-                        sendMessage(String.format("%s:%s",this.getUsername(),message));
+                while (beConnected) {
+                    message = (Message) is.readObject();
+                    switch (message.getType()) {
+                        case UPDATE_USER:
+                            String[] passes = message.getContent().split("&");
+                            User user = DAO.queryAUser(this.username);
+                            if (user.getPassword().equals(passes[0])) {
+                                boolean flag = DAO.updateUserPassword(this.username, passes[1]);
+                                if (flag) os.writeObject(new Message(MsgType.UPDATE_USER, "true"));
+                                else os.writeObject(new Message(MsgType.UPDATE_USER, "false"));
+                            } else {
+                                os.writeObject(new Message(MsgType.UPDATE_USER, "oldPasswordError"));
+                            }
+                            break;
+                        case DELETE_USER:
+                            String name = message.getContent();
+                            if (DAO.deleteUser(name))
+                                os.writeObject(new Message(MsgType.DELETE_USER, "true"));
+                            else
+                                os.writeObject(new Message(MsgType.DELETE_USER, "false"));
+                            break;
+                        case PRIVATE_MSG:
+                            String[] sendToOneInfo = message.getContent().split("&");
+                            sendToOne(sendToOneInfo);
+                            break;
+                        case PUBLIC_MSG:
+                            sendMessage(MsgType.PUBLIC_MSG, String.format("%s:%s", this.getUsername(), message.getContent()));
+                            break;
+                    }
+                }
+            } catch (IOException ioException) {
+                System.out.println(this.username+"下线了！");
+            } catch (ClassNotFoundException classNotFoundException) {
+                classNotFoundException.printStackTrace();
+            } finally{
+                this.close();
             }
-        }catch(SocketException e){
-            System.out.println("a client quit!");
-        }catch(EOFException e){
-            System.out.println("Client closed!");
-        }catch (IOException e) {
-            System.out.println("发生未知IO错误！");
-        }finally{
-            this.close();
-        }
     }
 }

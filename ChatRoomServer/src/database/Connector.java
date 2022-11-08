@@ -19,7 +19,7 @@ public class Connector {
         }
         ResourceBundle resourceBundle = ResourceBundle.getBundle("config");
         IP = resourceBundle.getString("ip");
-        URL = String.format("jdbc:mysql://%s:3306/chat?useUnicode=true&characterEncoding=utf8",IP);
+        URL = String.format("jdbc:mysql://%s:3306/chat?useSSL=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai",IP);
         USERNAME = resourceBundle.getString("username");
         PASSWORD = resourceBundle.getString("password");
     }
