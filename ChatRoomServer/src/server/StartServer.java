@@ -1,21 +1,21 @@
 package server;
 
+import server.view.ServerView;
+import utils.ConfigGetter;
+
 import javax.swing.*;
+import java.awt.*;
 
 public class StartServer {
     public static void main(String[] args) {
-        // 设置GUI风格
+        // 设置GUI风格，跟随系统风格
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (UnsupportedLookAndFeelException e) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
             e.printStackTrace();
         }
-        new Server();
+
+        // 启动服务器
+        ServerView.start();
     }
 }

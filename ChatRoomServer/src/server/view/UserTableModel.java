@@ -1,16 +1,19 @@
-package server;
+package server.view;
 
-import database.api.DAO;
+import database.UserDao;
 
 import javax.swing.table.AbstractTableModel;
 
+/**
+ * 用户表视图
+ */
 public class UserTableModel extends AbstractTableModel {
-    private String[] columnNames = null;
-    private String[] users = null;
+    private final String[] columnNames;
+    private final String[] users;
 
     public UserTableModel() {
         this.columnNames = new String[]{"账户"};
-        this.users = DAO.queryUsers();
+        this.users = UserDao.listUsernames();
     }
 
     @Override
