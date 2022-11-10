@@ -43,7 +43,7 @@ public class ClientControlThread extends Thread {
             try {
                 client.os.writeObject(Message.build(msgType, message));
             } catch (IOException e) {
-                System.out.println(client.username + "转发消息失败");
+                System.out.println(CommonUtil.join(client.username, "转发消息失败"));
             }
         });
     }
@@ -58,7 +58,7 @@ public class ClientControlThread extends Thread {
         try {
             ClientControlThread client = clients.get(target);
             if (CommonUtil.isNull(client)) {
-                System.out.println(target + "socket丢失，发送失败");
+                System.out.println(CommonUtil.join(target, "socket丢失，发送失败"));
                 clients.remove(target);
             } else {
                 client.os.writeObject(Message.build(MsgType.PRIVATE_MSG, String.format("%s发来私信：%s", username, content)));
@@ -96,10 +96,12 @@ public class ClientControlThread extends Thread {
     public void sendUserList() {
         StringBuilder nameList = new StringBuilder();
         // 拼接用户列表
-        clients.keySet().stream().map(str -> CommonConstant.AND + str).forEach(nameList::append);
+        clients.keySet().stream().map(str -> CommonUtil.join(CommonConstant.AND, str)).forEach(nameList::append);
         // 删除多余的&分隔符
-        nameList.deleteCharAt(0);
-        sendMessage(MsgType.USER_LIST, nameList.toString());
+        if (CommonUtil.isNotEmpty(nameList.toString())) {
+            nameList.deleteCharAt(0);
+            sendMessage(MsgType.USER_LIST, nameList.toString());
+        }
     }
 
     @Override
@@ -115,7 +117,7 @@ public class ClientControlThread extends Thread {
                 message = (Message) is.readObject();
                 switch (message.getType()) {
                     case UPDATE_USER:
-                        String[] passes = message.getContent().split("&");
+                        String[] passes = message.getContent().split(CommonConstant.AND);
                         User user = UserDao.queryUser(this.username);
                         if (CommonUtil.isEquals(user.getPassword(), passes[0])) {
                             boolean flag = UserDao.updateUserPassword(this.username, passes[1]);
@@ -138,13 +140,13 @@ public class ClientControlThread extends Thread {
                         sendToOne(sendToOneInfo[0], sendToOneInfo[1]);
                         break;
                     case PUBLIC_MSG:
-                        sendMessage(MsgType.PUBLIC_MSG, message.getContent());
+                        sendMessage(MsgType.PUBLIC_MSG, CommonUtil.join(username, CommonConstant.COLON, message.getContent()));
                         break;
                     default:
                 }
             }
         } catch (IOException ioException) {
-            System.out.println(this.username + "下线了！");
+            System.out.println(CommonUtil.join(this.username, "下线了！"));
         } catch (ClassNotFoundException classNotFoundException) {
             classNotFoundException.printStackTrace();
         } finally {

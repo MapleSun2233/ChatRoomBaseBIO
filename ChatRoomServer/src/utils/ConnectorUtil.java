@@ -10,9 +10,10 @@ public class ConnectorUtil {
     static {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
+            DriverManager.setLoginTimeout(1);
             connection = DriverManager.getConnection(ConfigGetter.getUrl(), ConfigGetter.getUsername(), ConfigGetter.getPassword());
         } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
+            System.out.println("数据库连接异常，请检查数据库配置和数据库状态！");
         }
     }
 
@@ -23,8 +24,7 @@ public class ConnectorUtil {
      */
     public static Connection getConnection() {
         try {
-            boolean valid = connection.isValid(500);
-            if (CommonUtil.isFalse(valid)) {
+            if (CommonUtil.isFalse(isValid())) {
                 connection = DriverManager.getConnection(ConfigGetter.getUrl(), ConfigGetter.getUsername(), ConfigGetter.getPassword());
             }
         } catch (SQLException e) {
@@ -34,15 +34,12 @@ public class ConnectorUtil {
     }
 
     /**
-     * 关闭数据库连接
+     * 判断连接有效性
      */
-    public static void closeConnection() {
-        if (CommonUtil.isNotNull(connection)) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+    public static boolean isValid() throws SQLException {
+        if (CommonUtil.isNull(connection)) {
+            return false;
         }
+        return connection.isValid(500);
     }
 }

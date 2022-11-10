@@ -1,20 +1,18 @@
 package client;
 
+import client.view.ClientView;
+
 import javax.swing.*;
 
 public class StartClient {
     public static void main(String[] args) {
-        try { // 设置主题
+        // 设置GUI风格，跟随系统风格
+        try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (UnsupportedLookAndFeelException e) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
             e.printStackTrace();
         }
-        new Client();
+        // 启动服务器
+        ClientView.start();
     }
 }

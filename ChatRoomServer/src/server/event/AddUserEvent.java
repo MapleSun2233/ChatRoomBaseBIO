@@ -71,11 +71,11 @@ public class AddUserEvent extends MouseAdapter {
             String emailAddress = CommonUtil.deleteAllBlankChar(email.getText());
             if (CommonUtil.isEmpty(username) || CommonUtil.isEmpty(password) || CommonUtil.isEmpty(emailAddress)) {
                 JOptionPane.showMessageDialog(dialog, "所有字段不能为空！");
-            } else if (!username.matches(CommonConstant.VALID_USERNAME_REGEX)) {
+            } else if (CommonUtil.isNotMatches(username, CommonConstant.VALID_USERNAME_REGEX)) {
                 JOptionPane.showMessageDialog(dialog, "用户名含有非法字符！");
-            } else if (!password.matches(CommonConstant.VALID_PASSWORD_REGEX)) {
+            } else if (CommonUtil.isNotMatches(password, CommonConstant.VALID_PASSWORD_REGEX)) {
                 JOptionPane.showMessageDialog(dialog, "密码含有非法字符！");
-            } else if (!emailAddress.matches(CommonConstant.VALID_EMAIL_REGEX)) {
+            } else if (CommonUtil.isNotMatches(emailAddress, CommonConstant.VALID_EMAIL_REGEX)) {
                 JOptionPane.showMessageDialog(dialog, "邮箱格式不合法！");
             } else {
                 if (UserDao.addUser(username, password, emailAddress)) {

@@ -7,10 +7,13 @@ import server.event.AddUserEvent;
 import server.event.DeleteUserEvent;
 import server.event.QueryUserEvent;
 import server.event.UpdateUserEvent;
+import utils.CommonUtil;
 import utils.ConfigGetter;
+import utils.ConnectorUtil;
 import utils.ThreadPoolUtil;
 
 import java.awt.*;
+import java.sql.SQLException;
 
 public class ServerView extends JFrame {
     public static final ServerView SERVER_VIEW = new ServerView();
@@ -45,6 +48,14 @@ public class ServerView extends JFrame {
         SERVER_VIEW.add(queryUser);
         SERVER_VIEW.add(portLabel);
         SERVER_VIEW.setVisible(true);
+        // 检查数据库连接状态
+        try {
+            if (CommonUtil.isFalse(ConnectorUtil.isValid())) {
+                JOptionPane.showMessageDialog(SERVER_VIEW, "数据库状态异常，请检查数据库连接！");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(SERVER_VIEW, "数据库状态异常，请检查数据库连接！");
+        }
         // 开启socket服务线程
         ThreadPoolUtil.execute(new ServerSocketTask(ConfigGetter.getPort()));
         // 检查分辨率并提示调整，避免分辨率过高导致组件位置异常

@@ -1,7 +1,8 @@
 package client.event;
 
-import utils.Message;
-import utils.MsgType;
+import constant.MsgType;
+import entity.Message;
+import utils.CommonUtil;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -10,9 +11,10 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 
 public class DeleteUserEvent implements ActionListener {
-    private JFrame frame;
-    private String username;
-    private ObjectOutputStream clientOS;
+    private final JFrame frame;
+    private final String username;
+    private final ObjectOutputStream clientOS;
+
     public DeleteUserEvent(JFrame frame, ObjectOutputStream clientOS, String username) {
         this.frame = frame;
         this.username = username;
@@ -21,10 +23,11 @@ public class DeleteUserEvent implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if(JOptionPane.showConfirmDialog(frame, "此账户将被删除！确认要注销此账户吗？")==0){
+        int confirm = JOptionPane.showConfirmDialog(frame, "此账户将被删除！确认要注销此账户吗？");
+        if (CommonUtil.isZero(confirm)) {
             // 注销业务
             try {
-                clientOS.writeObject(new Message(MsgType.DELETE_USER,this.username));
+                clientOS.writeObject(Message.build(MsgType.DELETE_USER, this.username));
             } catch (IOException ex) {
                 ex.printStackTrace();
             }

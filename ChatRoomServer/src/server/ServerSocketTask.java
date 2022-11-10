@@ -13,12 +13,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerSocketTask implements Runnable {
     /**
      * 客户端映射集合
      */
-    private final Map<String, ClientControlThread> clients = new HashMap<>();
+    private final Map<String, ClientControlThread> clients = new ConcurrentHashMap<>();
     private ServerSocket serverSocket;
 
     public ServerSocketTask(int port) {
@@ -104,19 +105,19 @@ public class ServerSocketTask implements Runnable {
             responseMessage = "账户不存在";
         } else if (clients.containsKey(existUser.getUsername())) {
             responseMessage = "账户已经登录";
-        } else if (CommonUtil.isFalse(existUser.getPassword().equals(loginInfo[1]))) {
+        } else if (CommonUtil.isNotEquals(existUser.getPassword(), loginInfo[1])) {
             responseMessage = "密码错误";
         }
         // 判断是否有错误消息，没有就是成功
         if (CommonUtil.isEmpty(responseMessage)) {
-            clientOS.writeObject(Message.build(MsgType.LOGIN_FAIL, responseMessage));
-            closeResource(clientSocket, clientIS, clientOS);
-        } else {
             ClientControlThread ccThread = new ClientControlThread(clients, clientSocket, clientIS, clientOS, loginInfo[0]);
             clients.put(loginInfo[0], ccThread);
             ThreadPoolUtil.execute(ccThread);
             clientOS.writeObject(Message.build(MsgType.LOGIN_SUCCESS, "登录成功"));
-            System.out.println(loginInfo[0] + "上线了！");
+            System.out.println(CommonUtil.join(loginInfo[0], "上线了！"));
+        } else {
+            clientOS.writeObject(Message.build(MsgType.LOGIN_FAIL, responseMessage));
+            closeResource(clientSocket, clientIS, clientOS);
         }
     }
 
@@ -125,7 +126,7 @@ public class ServerSocketTask implements Runnable {
         User user = UserDao.queryUser(retrieveInfo[0]);
         if (CommonUtil.isNull(user)) {
             clientOS.writeObject(Message.build(MsgType.RETRIEVE_FAIL, "账户不存在"));
-        } else if (!user.getEmail().equals(retrieveInfo[1])) {
+        } else if (CommonUtil.isNotEquals(user.getEmail(), retrieveInfo[1])) {
             clientOS.writeObject(Message.build(MsgType.RETRIEVE_FAIL, "邮箱错误"));
         } else {
             clientOS.writeObject(Message.build(MsgType.RETRIEVE_SUCCESS, user.getPassword()));

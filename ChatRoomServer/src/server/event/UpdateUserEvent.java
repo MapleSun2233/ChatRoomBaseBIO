@@ -98,9 +98,9 @@ public class UpdateUserEvent extends MouseAdapter {
                 String emailAddress = CommonUtil.deleteAllBlankChar(email.getText());
                 if (CommonUtil.isEmpty(password) || CommonUtil.isEmpty(emailAddress)) {
                     JOptionPane.showMessageDialog(updateDialog, "所有字段必须填写!");
-                } else if (!password.matches(CommonConstant.VALID_PASSWORD_REGEX)) {
+                } else if (CommonUtil.isNotMatches(password, CommonConstant.VALID_PASSWORD_REGEX)) {
                     JOptionPane.showMessageDialog(dialog, "密码含有非法字符！");
-                } else if (!emailAddress.matches(CommonConstant.VALID_EMAIL_REGEX)) {
+                } else if (CommonUtil.isNotMatches(emailAddress, CommonConstant.VALID_EMAIL_REGEX)) {
                     JOptionPane.showMessageDialog(updateDialog, "邮箱地址不合法!");
                 } else {
                     if (UserDao.updateUser(username, password, emailAddress)) {

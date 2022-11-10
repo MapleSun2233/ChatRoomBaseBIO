@@ -20,8 +20,6 @@ public class UserDao {
             flag = statement.executeUpdate() == 1;
         } catch (SQLException e) {
             System.out.println("数据库异常或账户已经存在！");
-        } finally {
-            ConnectorUtil.closeConnection();
         }
         return flag;
     }
@@ -33,8 +31,6 @@ public class UserDao {
             flag = statement.executeUpdate() == 1;
         } catch (SQLException e) {
             System.out.println("数据库异常或账户不存在！");
-        } finally {
-            ConnectorUtil.closeConnection();
         }
         return flag;
     }
@@ -48,8 +44,6 @@ public class UserDao {
             flag = statement.executeUpdate() == 1;
         } catch (SQLException e) {
             System.out.println("数据库异常或账户不存在！");
-        } finally {
-            ConnectorUtil.closeConnection();
         }
         return flag;
     }
@@ -62,8 +56,6 @@ public class UserDao {
             flag = statement.executeUpdate() == 1;
         } catch (SQLException e) {
             System.out.println("数据库异常或账户不存在！");
-        } finally {
-            ConnectorUtil.closeConnection();
         }
         return flag;
     }
@@ -78,8 +70,6 @@ public class UserDao {
             return list.toArray(new String[0]);
         } catch (SQLException e) {
             System.out.println("数据库异常");
-        } finally {
-            ConnectorUtil.closeConnection();
         }
         return null;
     }
@@ -93,8 +83,6 @@ public class UserDao {
             }
         } catch (SQLException e) {
             System.out.println("数据库异常");
-        } finally {
-            ConnectorUtil.closeConnection();
         }
         return null;
     }
